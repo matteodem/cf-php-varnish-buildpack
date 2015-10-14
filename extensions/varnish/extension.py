@@ -16,7 +16,7 @@
 import os
 import os.path
 import logging
-    
+
 _log = logging.getLogger('varnish')
 
 DEFAULTS = {
@@ -24,6 +24,8 @@ DEFAULTS = {
     'VARNISH_VERSION': '3.0.6',
     'VARNISH_PACKAGE': 'varnish-{VARNISH_VERSION}.tar.gz',
     'VARNISH_DOWNLOAD_URL': 'https://gitlab.liip.ch/chregu/cf-varnish-binary/raw/master/vendor/varnish-{VARNISH_VERSION}.tar.gz',
+    'DEFAULT_VCL': 'default.vcl',
+    'PRE_VARNISH_COMMAND': False,
 }
 
 
@@ -39,10 +41,10 @@ class VarnishInstaller(object):
         for key, val in DEFAULTS.iteritems():
             if key not in self._ctx:
                 self._ctx[key] = val
-                
+
     def should_install(self):
         return self._ctx['CACHE_SERVER'] == 'varnish'
-    
+
     def install(self):
         _log.info("Installing Varnish METHOD")
         self._builder.install()._installer._install_binary_from_manifest(
@@ -50,12 +52,13 @@ class VarnishInstaller(object):
                 os.path.join('app'),
                 extract=True)
 
-        
+
 
 def preprocess_commands(ctx):
     return ((
         '$HOME/.bp/bin/rewrite',
-        '"$HOME/varnish/etc/varnish"'),)
+        '"$HOME/varnish/etc/varnish"'),
+        ( ctx['PRE_VARNISH_COMMAND']))
 
 
 def service_commands(ctx):
@@ -64,7 +67,7 @@ def service_commands(ctx):
                 '$HOME/varnish/sbin/varnishd',
                 '-n $TMPDIR/varnish/',
                 '-F',
-                '-f $HOME/varnish/etc/varnish/default.vcl',
+                '-f $HOME/varnish/etc/varnish/$DEFAULT_VCL',
                 '-a 0.0.0.0:$VCAP_APP_PORT',
                 '-t 120',
                 '-w 50,1000,120',
