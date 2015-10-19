@@ -58,8 +58,7 @@ def preprocess_commands(ctx):
     return ((
         '$HOME/.bp/bin/rewrite',
         '"$HOME/varnish/etc/varnish"'),
-        ( ctx['PRE_VARNISH_COMMAND']))
-
+        (ctx['PRE_VARNISH_COMMAND']))
 
 def service_commands(ctx):
     return {
